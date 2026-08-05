@@ -4,9 +4,14 @@ from abc import ABC, abstractmethod
 NODE_TYPES = {
     "OUTPUT": 1,
     "INPUT": 0,
-    "INTER": 0.5
+    "INTER": 0.5,
 }
 
+
+REGISTERED_NODES = {}
+
+# dict of fields that will be set at beginning of file, each will
+GLOBALS = {}
 
 class Field(ABC):
     def __init__(self):
@@ -28,10 +33,12 @@ class GenericFloatField(Field):
         self.label = label
 
     def imGuiInputDisplayer(self):
-        dpg.add_input_float(label=self.label, default_value=self.value)
+        if (self.value is not None):
+            dpg.add_input_float(label=self.label, default_value=self.value)
 
     def imGuiOutputDisplayer(self):
-        dpg.add_text(f"{self.label}: {self.value}")
+        if (self.value is not None):
+            dpg.add_text(f"{self.label}: {self.value}")
 
 
 class Node:
