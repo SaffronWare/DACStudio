@@ -28,15 +28,22 @@ class Node(ABC):
 
         # display name of the code
         self.NodeLabel = None
+        self.unique = False
 
         # Labels for all input fields
         self.InputFields = []
         self.OutputFields = []
+
+
+    def onode(self,i):
+        return "".join(self.NodeLabel.split()) + "_" + "".join(self.OutputFields[i].label.split())
         
 
     @abstractmethod
     def __str__(self):
         return
+
+
 
     def draw(self):
         with dpg.node(label=self.NodeLabel):
@@ -84,6 +91,29 @@ class MPU6500_Accelerometer_Data_Node(Node):
             Field("Accelerometer Z")
         ]
 
+
+    def __str__(self):
+        return ""
+
+class MPU6500_Gyro_Data_Node(Node):
+    def __init__(self):
+        super().__init__()
+
+        self.NodeLabelAbsolute = "Accelerometer Data"
+
+        self.InputFields = [
+            Field("AAccX", True),
+            Field("AAccY", True),
+            Field("AAccZ", True)
+        ]
+
+        self.OutputFields = [
+            Field("Gyroscope X"),
+            Field("Gyroscope Y"),
+            Field("Gyroscope Z")
+        ]
+
+
     def __str__(self):
         return ""
 
@@ -92,6 +122,7 @@ class ServoOutputNode(Node):
         super().__init__()
 
         self.NodeLabelAbsolute = "Servo Output"
+        self.unique = True
 
         self.InputFields = [
             Field("Servo Yaw"),
@@ -113,9 +144,14 @@ nodes_in_right_format = {}
 node_label_counts = {}
 
 def insertNode(node : Node):
-    node_label_counts[node.NodeLabelAbsolute] = node_label_counts.get(node.NodeLabelAbsolute, -1) + 1
-    node.NodeLabel = node.NodeLabelAbsolute + " " + str(node_label_counts[node.NodeLabelAbsolute])
-    nodes.append(node)
+    if (not node.unique):
+        node_label_counts[node.NodeLabelAbsolute] = node_label_counts.get(node.NodeLabelAbsolute, -1) + 1
+        node.NodeLabel = node.NodeLabelAbsolute + " " + str(node_label_counts[node.NodeLabelAbsolute])
+        nodes.append(node)
+    elif node.NodeLabelAbsolute not in node_label_counts:
+        nodes.append(node)
+        node_label_counts[node.NodeLabelAbsolute] = 1
+        node.NodeLabel = node.NodeLabelAbsolute
 
 for _ in range(2):
     insertNode(MPU6500_Accelerometer_Data_Node())
@@ -143,7 +179,7 @@ def link_callback(sender, app_data):
     iid, ifid, ifn = ni 
     oid, ofid, ofn = no 
 
-
+    ifn.InputFields[ifid].state = ofn.onode(ofid)
     
     print(sender, app_data)
 
