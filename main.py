@@ -10,13 +10,20 @@ NODE_TYPES = {
 
 REGISTERED_NODES = {}
 
-# dict of fields that will be set at beginning of file, each will
-GLOBALS = {}
+def RegisterNode(label, cls):
+    if label in REGISTERED_NODES:
+        REGISTERED_NODES[label]["count"] += 1
+        return label + " " + str(REGISTERED_NODES[label]["count"])
+    else:
+        REGISTERED_NODES[label] = {"id_or_class":cls, "count":0}
+        return label + " 0"
+
 
 class Field(ABC):
     def __init__(self):
         self.label = None
         self.value = None
+        self.datatype = None
 
     @abstractmethod
     def imGuiInputDisplayer(self):
@@ -25,6 +32,9 @@ class Field(ABC):
     @abstractmethod
     def imGuiOutputDisplayer(self):
         pass
+
+# dict of fields that will be set at beginning of file, each will
+GLOBALS = {}
 
 
 class GenericFloatField(Field):
@@ -72,11 +82,14 @@ class AccDataNode(Node):
             "accz": GenericFloatField("AccZ", 0)
         }
 
+        self.label = RegisterNode(self.label, AccDataNode)
+
+
     def display(self):
         return super().display()
 
 
-NODES = [AccDataNode()]
+NODES = [AccDataNode(), AccDataNode()]
 
 
 dpg.create_context()
@@ -89,6 +102,7 @@ dpg.configure_app(
 # callback runs when user attempts to connect attributes
 def link_callback(sender, app_data):
     # app_data -> (link_id1, link_id2)
+    print(sender, app_data)
     dpg.add_node_link(app_data[0], app_data[1], parent=sender)
 
 # callback runs when user attempts to disconnect attributes
@@ -101,6 +115,9 @@ with dpg.window(label="Tutorial", width=400, height=400):
     with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
         for node in NODES:
             node.display()
+
+with dpg.window(label="Nodes"):
+    dpg.add_text("Pick your nodes here.")
 
 dpg.create_viewport(title='DAC Studio', width=600, height=300)
 
