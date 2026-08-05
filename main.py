@@ -1,15 +1,6 @@
 import dearpygui.dearpygui as dpg
 from abc import ABC, abstractmethod
 
-NODE_TYPES = {
-    "OUTPUT": 1,
-    "INPUT": 0,
-    "INTER": 0.5,
-}
-
-
-REGISTERED_NODES = {}
-
 class Field:
     def __init__(self, fieldLabel, masked=False):
         self.fieldLabel = fieldLabel
@@ -17,9 +8,12 @@ class Field:
         # if true, wont show and will be written ABSOLUTELY in the code
         # absolute means refered to as a global variable and not a
         # node-dependant local one.
+
+        # if not set to True, by default it will be set to False which is a node dependant local variable,
+        # for a vlaid state that isnt true, it should have a string referall name that refers to another node.
         self.masked = masked
 
-class Node:
+class Node(ABC):
     def __init__(self):
         # name of registered node class
         self.NodeLabelAbsolute = None
@@ -31,9 +25,18 @@ class Node:
         self.InputFields = []
         self.OutputFields = []
 
-        # if false or missing, 
-        self.InputMasks = []
-        self.OutputMasks = []
+    @abstractmethod
+    def __str__(self):
+        return
+
+class MPU6500_Accelerometer_Data_Node(Node):
+    def __init__(self):
+        super().__init__()
+        self.InputFields = [
+            Field("AccX"),
+            Field("AccY"),
+            Field("AccZ")
+        ] 
 
 dpg.create_context()
 
