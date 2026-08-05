@@ -2,7 +2,7 @@ import dearpygui.dearpygui as dpg
 from abc import ABC, abstractmethod
 
 class Field:
-    def __init__(self, fieldLabel, masked=False):
+    def __init__(self, fieldLabel, masked=False, range=None):
         self.fieldLabel = fieldLabel
 
         # if true, wont show and will be written ABSOLUTELY in the code
@@ -12,6 +12,7 @@ class Field:
         # if not set to True, by default it will be set to False which is a node dependant local variable,
         # for a vlaid state that isnt true, it should have a string referall name that refers to another node.
         self.masked = masked
+        self.range = range
 
 class Node(ABC):
     def __init__(self):
@@ -29,14 +30,23 @@ class Node(ABC):
     def __str__(self):
         return
 
+    def draw(self):
+
+
 class MPU6500_Accelerometer_Data_Node(Node):
     def __init__(self):
         super().__init__()
         self.InputFields = [
-            Field("AccX"),
-            Field("AccY"),
-            Field("AccZ")
-        ] 
+            Field("AccX", True),
+            Field("AccY", True),
+            Field("AccZ", True)
+        ]
+
+        self.OutputFields = [
+            Field("Accelerometer X"),
+            Field("Accelerometer Y"),
+            Field("Accelerometer Z")
+        ]
 
 dpg.create_context()
 
