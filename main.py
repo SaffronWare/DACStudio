@@ -23,39 +23,53 @@ class Field(ABC):
 
 
 class GenericFloatField(Field):
-    def __init__(self, label, default_or_start):
+    def __init__(self, label="genfloat", default_or_start=0):
         self.value = default_or_start
         self.label = label
 
     def imGuiInputDisplayer(self):
-        dpg.add_input_float(label=self.label, width=150)
+        dpg.add_input_float(label=self.label, default_value=self.value)
+
+    def imGuiOutputDisplayer(self):
+        dpg.add_text(f"{self.label}: {self.value}")
 
 
 class Node:
     def __init__(self):
         self.label = ""
         self.type = None
-        self.input_fields = []
-        self.output_fields = []
+
+        # dict keys are internal labels. for now.
+        self.input_fields = {}
+        self.output_fields = {}
 
     def display(self):
         with dpg.node(label=self.label):
-            for input_field in self.input_fields:
+            for input_field in self.input_fields.values():
                 with dpg.node_attribute(label=input_field.label):
                     input_field.imGuiInputDisplayer()
-            for output_field in self.output_fields:
-                with dpg.node_attribute(label=output_field.label):
+            for output_field in self.output_fields.values():
+                with dpg.node_attribute(label=output_field.label, attribute_type=dpg.mvNode_Attr_Output):
                     output_field.imGuiOutputDisplayer()
 
 class AccDataNode(Node):
     def __init__(self):
         self.label = "Accelerometer Data"
         self.type = NODE_TYPES["INPUT"]
-        self.input_fields = []
-        self.output_fields = []
+        self.input_fields = {
+            
+        }
+        self.output_fields = {
+            "accx": GenericFloatField("AccX", 0),
+            "accy": GenericFloatField("AccY", 0),
+            "accz": GenericFloatField("AccZ", 0)
+        }
+
+    def display(self):
+        return super().display()
 
 
-NODES = []
+NODES = [AccDataNode()]
 
 
 dpg.create_context()
