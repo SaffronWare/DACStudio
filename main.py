@@ -10,113 +10,30 @@ NODE_TYPES = {
 
 REGISTERED_NODES = {}
 
-def RegisterNode(label, cls):
-    if label in REGISTERED_NODES:
-        REGISTERED_NODES[label]["count"] += 1
-        return label + " " + str(REGISTERED_NODES[label]["count"])
-    else:
-        REGISTERED_NODES[label] = {"id_or_class":cls, "count":0}
-        return label + " 0"
+class Field:
+    def __init__(self, fieldLabel, masked=False):
+        self.fieldLabel = fieldLabel
 
-
-class Field(ABC):
-    def __init__(self):
-        self.label = None
-        self.value = None
-        self.datatype = None
-
-    @abstractmethod
-    def imGuiInputDisplayer(self):
-        pass
-
-    @abstractmethod
-    def imGuiOutputDisplayer(self):
-        pass
-
-# dict of fields that will be set at beginning of file, each will
-GLOBALS = {}
-
-
-class GenericFloatField(Field):
-    def __init__(self, label="genfloat", default_or_start=0):
-        self.value = default_or_start
-        self.label = label
-
-    def imGuiInputDisplayer(self):
-        if (self.value is not None):
-            dpg.add_input_float(label=self.label, default_value=self.value)
-
-    def imGuiOutputDisplayer(self):
-        if (self.value is not None):
-            dpg.add_text(f"{self.label}: {self.value}")
-
+        # if true, wont show and will be written ABSOLUTELY in the code
+        # absolute means refered to as a global variable and not a
+        # node-dependant local one.
+        self.masked = masked
 
 class Node:
     def __init__(self):
-        self.label = ""
-        self.type = None
+        # name of registered node class
+        self.NodeLabelAbsolute = None
 
-        # dict keys are internal labels. for now.
-        self.input_fields = {}
-        self.output_fields = {}
+        # display name of the code
+        self.NodeLabel = None
 
-    def display(self):
-        with dpg.node(label=self.label):
-            for input_field in self.input_fields.values():
-                with dpg.node_attribute(label=input_field.label):
-                    input_field.imGuiInputDisplayer()
-            for output_field in self.output_fields.values():
-                with dpg.node_attribute(label=output_field.label, attribute_type=dpg.mvNode_Attr_Output):
-                    output_field.imGuiOutputDisplayer()
+        # Labels for all input fields
+        self.InputFields = []
+        self.OutputFields = []
 
-class AccDataNode(Node):
-    def __init__(self):
-        self.label = "Accelerometer Data"
-        self.type = NODE_TYPES["INPUT"]
-        self.input_fields = {
-            
-        }
-        self.output_fields = {
-            "accx": GenericFloatField("AccX", 0),
-            "accy": GenericFloatField("AccY", 0),
-            "accz": GenericFloatField("AccZ", 0)
-        }
-
-        self.label = RegisterNode(self.label, AccDataNode)
-
-
-    def display(self):
-        return super().display()
-
-class TwoSum(Node):
-    def __init__(self):
-        self.label = "Sum"
-        self.type = NODE_TYPES["INTER"]
-        self.input_fields = {
-            "A": GenericFloatField("A", 0),
-            "B": GenericFloatField("B", 0)
-        }
-
-        self.output_fields = {
-            "Sum": GenericFloatField("Sum", 0)
-        }
-
-class TwoMul(Node):
-    def __init__(self):
-        self.label = "Multiply"
-        self.type = NODE_TYPES["INTER"]
-        self.input_fields = {
-            "A": GenericFloatField("A", 0),
-            "B": GenericFloatField("B", 0)
-        }
-
-        self.output_fields = {
-            "Sum": GenericFloatField("Product", 0)
-        }
-
-
-NODES = [AccDataNode(), AccDataNode(), TwoSum()]
-
+        # if false or missing, 
+        self.InputMasks = []
+        self.OutputMasks = []
 
 dpg.create_context()
 
