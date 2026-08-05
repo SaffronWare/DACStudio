@@ -88,8 +88,34 @@ class AccDataNode(Node):
     def display(self):
         return super().display()
 
+class TwoSum(Node):
+    def __init__(self):
+        self.label = "Sum"
+        self.type = NODE_TYPES["INTER"]
+        self.input_fields = {
+            "A": GenericFloatField("A", 0),
+            "B": GenericFloatField("B", 0)
+        }
 
-NODES = [AccDataNode(), AccDataNode()]
+        self.output_fields = {
+            "Sum": GenericFloatField("Sum", 0)
+        }
+
+class TwoMul(Node):
+    def __init__(self):
+        self.label = "Multiply"
+        self.type = NODE_TYPES["INTER"]
+        self.input_fields = {
+            "A": GenericFloatField("A", 0),
+            "B": GenericFloatField("B", 0)
+        }
+
+        self.output_fields = {
+            "Sum": GenericFloatField("Product", 0)
+        }
+
+
+NODES = [AccDataNode(), AccDataNode(), TwoSum()]
 
 
 dpg.create_context()
@@ -97,6 +123,8 @@ dpg.create_context()
 dpg.configure_app(
     docking=True,
     docking_space=True,
+    init_file="dac-studio-layout.ini",
+    load_init_file=True,
 )
 
 # callback runs when user attempts to connect attributes
@@ -125,5 +153,8 @@ dpg.create_viewport(title='DAC Studio', width=600, height=300)
 dpg.setup_dearpygui()
 dpg.show_viewport()
 dpg.start_dearpygui()
+
+dpg.save_init_file("dac-studio-layout.ini")
+
 dpg.destroy_context()
         
