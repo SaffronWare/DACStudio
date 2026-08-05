@@ -1,6 +1,10 @@
 import dearpygui.dearpygui as dpg
 from abc import ABC, abstractmethod
 
+def add_input_float(**kwargs):
+    kwargs.setdefault("width", 100)
+    return dpg.add_input_float(**kwargs)
+
 class Field:
     def __init__(self, fieldLabel, state=False, range=None):
         self.label = fieldLabel
@@ -39,7 +43,7 @@ class Node(ABC):
                     with dpg.node_attribute(label=InputField.label):
                         if InputField.state == False:
                             if InputField.range is None:
-                                dpg.add_input_float(label=InputField.label)
+                                add_input_float(label=InputField.label)
                             else:
                                 dpg.add_slider_float(label=InputField.label, min_value=InputField.range[0], max_value=InputField.range[1])
                         elif isinstance(InputField.state, str):
@@ -53,6 +57,7 @@ class Node(ABC):
                 elif OutputField.state == False:
                     with dpg.node_attribute(label=OutputField.label,attribute_type=dpg.mvNode_Attr_Output):
                         dpg.add_text(OutputField.label)
+
 
 class MPU6500_Accelerometer_Data_Node(Node):
     def __init__(self):
@@ -128,7 +133,7 @@ def delink_callback(sender, app_data):
     # app_data -> link_id
     dpg.delete_item(app_data)
 
-with dpg.window(label="Tutorial", width=400, height=400):
+with dpg.window(label="Tutorial", width=1200, height=900):
 
     with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
         for node in nodes:
@@ -137,7 +142,7 @@ with dpg.window(label="Tutorial", width=400, height=400):
 with dpg.window(label="Nodes"):
     dpg.add_text("Pick your nodes here.")
 
-dpg.create_viewport(title='DAC Studio', width=600, height=300)
+dpg.create_viewport(title='DAC Studio', width=1200, height=900)
 
 
 dpg.setup_dearpygui()
