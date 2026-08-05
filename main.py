@@ -1,35 +1,50 @@
-import pygame
-
-pygame.init()
-clock = pygame.time.Clock()
+import dearpygui.dearpygui as dpg
 
 
-class Application:
-    def __init__(self):
-        self.FPS = 60
-        self.dt = 1/self.FPS
-        self.def_dims = (1000, 1000)
-        self.window = None
+dpg.create_context()
 
-    def start(self):
-        self.window = pygame.display.set_mode((1000,1000))
+dpg.configure_app(
+    docking=True,
+    docking_space=True,
+)
+
+# callback runs when user attempts to connect attributes
+def link_callback(sender, app_data):
+    # app_data -> (link_id1, link_id2)
+    dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+
+# callback runs when user attempts to disconnect attributes
+def delink_callback(sender, app_data):
+    # app_data -> link_id
+    dpg.delete_item(app_data)
+
+with dpg.window(label="Tutorial", width=400, height=400):
+
+    with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
+        with dpg.node(label="Node 1"):
+            with dpg.node_attribute(label="Node A1"):
+                dpg.add_input_float(label="F1", width=150)
+
+            with dpg.node_attribute(label="Node A2", attribute_type=dpg.mvNode_Attr_Output):
+                dpg.add_input_float(label="F2", width=150)
+
+        with dpg.node(label="Node 2"):
+            with dpg.node_attribute(label="Node A3"):
+                dpg.add_input_float(label="F3", width=200)
+
+            with dpg.node_attribute(label="Node A4", attribute_type=dpg.mvNode_Attr_Output):
+                dpg.add_input_float(label="F4", width=200)
+
+dpg.create_viewport(title='Custom Title', width=600, height=300)
+
+with dpg.window(label="Example Window"):
+    dpg.add_text("Hello, world")
+    dpg.add_button(label="Save")
+    dpg.add_input_text(label="string", default_value="Quick brown fox")
+    dpg.add_slider_float(label="float", default_value=0.273, max_value=1)
+
+dpg.setup_dearpygui()
+dpg.show_viewport()
+dpg.start_dearpygui()
+dpg.destroy_context()
         
-        while True:
-            self.window.fill((0,0,0))
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    return
-
-            pygame.display.flip()
-            clock.tick(self.FPS)
-
-        
-def main():
-    app = Application()
-    app.start()
-
-
-if __name__ == '__main__':
-    main()
