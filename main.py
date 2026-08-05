@@ -18,6 +18,9 @@ class Field:
         self.state = state
         self.range = range
 
+
+ID_NODE_HASHMAP = {}
+
 class Node(ABC):
     def __init__(self):
         # name of registered node class
@@ -29,6 +32,7 @@ class Node(ABC):
         # Labels for all input fields
         self.InputFields = []
         self.OutputFields = []
+        
 
     @abstractmethod
     def __str__(self):
@@ -36,11 +40,12 @@ class Node(ABC):
 
     def draw(self):
         with dpg.node(label=self.NodeLabel):
-            for InputField in self.InputFields:
+            for i, InputField in enumerate(self.InputFields):
                 if InputField.state == True:
                     pass
                 else:
-                    with dpg.node_attribute(label=InputField.label):
+                    with dpg.node_attribute(label=InputField.label) as id:
+                        ID_NODE_HASHMAP[id] = [i, self, "INPUT"]
                         if InputField.state == False:
                             if InputField.range is None:
                                 add_input_float(label=InputField.label)
@@ -51,11 +56,13 @@ class Node(ABC):
                        
                         # masked do nothing
             
-            for OutputField in self.OutputFields:
+            for i, OutputField in enumerate(self.OutputFields):
+                
                 if OutputField.state == True:
                     pass
                 elif OutputField.state == False:
-                    with dpg.node_attribute(label=OutputField.label,attribute_type=dpg.mvNode_Attr_Output):
+                    with dpg.node_attribute(label=OutputField.label,attribute_type=dpg.mvNode_Attr_Output) as id:
+                        ID_NODE_HASHMAP[id] = [i, self, "OUTPUT"]
                         dpg.add_text(OutputField.label)
 
 
@@ -102,6 +109,7 @@ class ServoOutputNode(Node):
         return ""
 
 nodes = []
+nodes_in_right_format = {}
 node_label_counts = {}
 
 def insertNode(node : Node):
@@ -122,13 +130,30 @@ dpg.configure_app(
     load_init_file=True,
 )
 
-# callback runs when user attempts to connect attributes
+def norm_nodes(ids):
+    id0, id1=  ids 
+    if ID_NODE_HASHMAP[id0][2] == "OUTPUT":
+        return [id1] + ID_NODE_HASHMAP[id1][:2], [id0] + ID_NODE_HASHMAP[id0][:2]
+    return [id0] + ID_NODE_HASHMAP[id0][:2], [id1] + ID_NODE_HASHMAP[id1][:2]
+
+old_links = {}
 def link_callback(sender, app_data):
     # app_data -> (link_id1, link_id2)
-    print(sender, app_data)
-    dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+    ni,no = norm_nodes(app_data)
+    iid, ifid, ifn = ni 
+    oid, ofid, ofn = no 
 
-# callback runs when user attempts to disconnect attributes
+
+    
+    print(sender, app_data)
+
+    if iid in old_links:
+        dpg.delete_item(old_links[iid])
+
+    old_links[iid]= dpg.add_node_link(iid, oid, parent=sender)
+    
+
+
 def delink_callback(sender, app_data):
     # app_data -> link_id
     dpg.delete_item(app_data)
