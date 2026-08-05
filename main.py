@@ -39,7 +39,7 @@ class Node(ABC):
                     with dpg.node_attribute(label=InputField.label):
                         if InputField.state == False:
                             if InputField.range is None:
-                                dpg.add_float_value(label=InputField.label)
+                                dpg.add_input_float(label=InputField.label)
                             else:
                                 dpg.add_slider_float(label=InputField.label, min_value=InputField.range[0], max_value=InputField.range[1])
                         elif isinstance(InputField.state, str):
@@ -54,14 +54,12 @@ class Node(ABC):
                     with dpg.node_attribute(label=OutputField.label,attribute_type=dpg.mvNode_Attr_Output):
                         dpg.add_text(OutputField.label)
 
-
-                    
-
-
-
 class MPU6500_Accelerometer_Data_Node(Node):
     def __init__(self):
         super().__init__()
+
+        self.NodeLabelAbsolute = "Accelerometer Data"
+
         self.InputFields = [
             Field("AccX", True),
             Field("AccY", True),
@@ -73,6 +71,42 @@ class MPU6500_Accelerometer_Data_Node(Node):
             Field("Accelerometer Y"),
             Field("Accelerometer Z")
         ]
+
+    def __str__(self):
+        return ""
+
+class ServoOutputNode(Node):
+    def __init__(self):
+        super().__init__()
+
+        self.NodeLabelAbsolute = "Servo Output"
+
+        self.InputFields = [
+            Field("Servo Yaw"),
+            Field("Servo Pitch"),
+            Field("Servo Roll")
+        ]
+
+        self.OutputFields = [
+            Field("servoYaw", True),
+            Field("servoPitch", True),
+            Field("servoRoll", True)
+        ]
+
+    def __str__(self):
+        return ""
+
+nodes = []
+node_label_counts = {}
+
+def insertNode(node : Node):
+    node_label_counts[node.NodeLabelAbsolute] = node_label_counts.get(node.NodeLabelAbsolute, -1) + 1
+    node.NodeLabel = node.NodeLabelAbsolute + " " + str(node_label_counts[node.NodeLabelAbsolute])
+    nodes.append(node)
+
+for _ in range(2):
+    insertNode(MPU6500_Accelerometer_Data_Node())
+    insertNode(ServoOutputNode())
 
 dpg.create_context()
 
@@ -97,8 +131,8 @@ def delink_callback(sender, app_data):
 with dpg.window(label="Tutorial", width=400, height=400):
 
     with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
-        for node in NODES:
-            node.display()
+        for node in nodes:
+            node.draw()
 
 with dpg.window(label="Nodes"):
     dpg.add_text("Pick your nodes here.")
