@@ -2,8 +2,8 @@ import dearpygui.dearpygui as dpg
 from abc import ABC, abstractmethod
 
 class Field:
-    def __init__(self, fieldLabel, masked=False, range=None):
-        self.fieldLabel = fieldLabel
+    def __init__(self, fieldLabel, state=False, range=None):
+        self.label = fieldLabel
 
         # if true, wont show and will be written ABSOLUTELY in the code
         # absolute means refered to as a global variable and not a
@@ -11,7 +11,7 @@ class Field:
 
         # if not set to True, by default it will be set to False which is a node dependant local variable,
         # for a vlaid state that isnt true, it should have a string referall name that refers to another node.
-        self.masked = masked
+        self.state = state
         self.range = range
 
 class Node(ABC):
@@ -31,6 +31,32 @@ class Node(ABC):
         return
 
     def draw(self):
+        with dpg.node(label=self.NodeLabel):
+            for InputField in self.InputFields:
+                if InputField.state == True:
+                    pass
+                else:
+                    with dpg.node_attribute(label=InputField.label):
+                        if InputField.state == False:
+                            if InputField.range is None:
+                                dpg.add_float_value(label=InputField.label)
+                            else:
+                                dpg.add_slider_float(label=InputField.label, min_value=InputField.range[0], max_value=InputField.range[1])
+                        elif isinstance(InputField.state, str):
+                            dpg.add_text("binded")
+                       
+                        # masked do nothing
+            
+            for OutputField in self.OutputFields:
+                if OutputField.state == True:
+                    pass
+                elif OutputField.state == False:
+                    with dpg.node_attribute(label=OutputField.label,attribute_type=dpg.mvNode_Attr_Output):
+                        dpg.add_text(OutputField.label)
+
+
+                    
+
 
 
 class MPU6500_Accelerometer_Data_Node(Node):
