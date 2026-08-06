@@ -39,7 +39,9 @@ class NodeField:
     def fullpath(self):
         return jjoin(self.parent.label, self.label)
 
-
+    def __str__(self):
+        return "var_" + "".join(self.parent.label.split()) + "_" + "".join(self.label.split())
+    
     def update_draw(self):
             
             if not self.drawn:
@@ -76,6 +78,10 @@ class Node(ABC):
 
     node_types_and_counts = {}
     registered_nodes = {}
+
+    @abstractmethod
+    def __init__(self):
+        pass
 
     def __init__(self):
         self.node_title = None
@@ -123,6 +129,13 @@ class Node(ABC):
                 node.update_draw()
 
 class ACCNODE(Node):
+
+    source_reference = """
+    !1! = s_AccX;
+    !2! = s_AccY;
+    !3! = s_AccZ;
+"""
+
     def __init__(self):
         super().__init__()
         self.node_title = "Accelerometer"
@@ -134,7 +147,32 @@ class ACCNODE(Node):
 
         self.label = self.register(self)
 
+
+class VARNODE(Node):
+    source_reference = """
+    !1! = $1$ 
+"""
+
+    def __init__(self, varname):
+        super().__init__()
+        self.node_title = "set " + varname
+        self.nodes[INPUT_FIELD] = [
+            NodeField(varname, self)
+        ]
+        self.nodes[OUTPUT_FIELD] = [
+            NodeField(varname,self)
+        ]
+
+        self.label = self.register(self, True)
+
+
 class GYRONODE(Node):
+    source_reference = """
+    !1! = s_GyroX;
+    !2! = s_GyroY;
+    !3! = s_GyroZ;
+"""
+
     def __init__(self):
         super().__init__()
         self.node_title = "Gyroscope"
@@ -147,12 +185,17 @@ class GYRONODE(Node):
         self.label = self.register(self)
 
 class SERVONODE(Node):
+    source_reference = """
+    s_ServoYaw = $1$;
+    s_ServoRoll = $2$;
+    s_ServoPitch = $3$;
+"""
     def __init__(self):
         super().__init__()
         self.node_title = "Airplane Servos"
         self.nodes[INPUT_FIELD] = [
             NodeField("Servo Yaw", self),
-            NodeField("Servo Row", self),
+            NodeField("Servo Roll", self),
             NodeField("Servo Pitch", self)
         ]
 
