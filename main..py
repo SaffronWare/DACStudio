@@ -9,6 +9,9 @@ CURR_NODES = {}
 def jjoin(*args):
     return "::".join(list(args))
 
+def ssplit(string):
+    return string.split("::")
+
 
 class NodeField:
     def __init__(self, label, parent, vrange=None):
@@ -17,6 +20,9 @@ class NodeField:
         self.label = label
         self.range = vrange
         self.parent = parent
+
+    def fullpath(self):
+        return jjoin(self.parent.label, self.label)
 
 
     def update_draw(self):
@@ -139,8 +145,37 @@ class SERVONODE(Node):
 
 
 def link_callback(sender, app_data):
-    print(f"linking {app_data[0], app_data[1]}")
-    dpg.add_node_link(app_data[0], app_data[1], parent=sender)
+
+    n1 ,f1 = ssplit(app_data[0])
+    n2,f2 = ssplit(app_data[1])
+
+    ninfo1 = Node.registered_nodes[n1].hashed_nodes[f1][1]
+    ninfo2 = Node.registered_nodes[n2].hashed_nodes[f2][1]
+
+    inNode = None
+    ouNode = None
+    if ninfo1 == INPUT_FIELD:
+        pass 
+    else:
+        n1,n2 = n2, n1
+        f1, f2 = f2, f1
+
+    inNode = Node.registered_nodes[n1].hashed_nodes[f1][0]
+    ouNode = Node.registered_nodes[n2].hashed_nodes[f2][0]
+
+
+
+    if inNode.connection is not None:
+        print(f"deleting connection: {jjoin(inNode.fullpath(), inNode.connection.fullpath())}")
+        dpg.delete_item(jjoin(inNode.fullpath(), inNode.connection.fullpath()))
+
+    inNode.connection = ouNode
+    Node.registered_nodes[n1].hashed_nodes[f1][0] = inNode
+        
+    
+    print(n1,f1,n2,f2)
+    print(f"creating {jjoin(inNode.fullpath(), ouNode.fullpath())}")
+    dpg.add_node_link(app_data[0], app_data[1], parent=sender, tag=jjoin(inNode.fullpath(), ouNode.fullpath()))
     
 def delink_callback(sender, app_data):
     dpg.delete_item(app_data)
@@ -149,6 +184,7 @@ def add_node_callback(sender, app_data, user_data):
     print(f"sender is: {sender}")
     print(f"app_data is: {app_data}")
     print(f"user_data is: {user_data}")
+
 
     match sender:
             case "acc_node":
