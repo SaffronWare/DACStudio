@@ -15,22 +15,26 @@ class NodeField:
 
 
     def update_draw(self):
-        
+            
             if not self.drawn:
                 #if self.connection is not None:
                 dpg.add_text(self.label, 
                             tag=self.parent.label + self.label + "CONNECTED")
+                print("t1")
                 #elif self.range is None:
-                dpg.add_float_value(label=self.parent.label + self.label, 
+                dpg.add_input_float(label=self.parent.label + self.label, 
                                     tag=self.parent.label + self.label + "FLOATVAL")
-                #else:
+                print("t2")
+           
                 dpg.add_slider_float(label=self.parent.label + self.label, 
-                                    min_value=self.range[0], 
-                                    max_value=self.range[1], 
+                                    min_value=0, 
+                                    max_value=1, 
                                     tag=self.parent.label + self.label + "FLOATRAN")
+                print("t3")
                 self.drawn = True
-                self.update_draw()
+                #self.update_draw()
             elif self.drawn:
+                return
                 dpg.hide_item(self.parent.label + self.label + "CONNECTED")
                 dpg.hide_item(self.parent.label + self.label + "FLOATVAL")
                 dpg.hide_item(self.parent.label + self.label + "FLOATRAN")
@@ -41,6 +45,7 @@ class NodeField:
                     dpg.show_item(self.parent.label + self.label + "FLOATVAL")
                 else:
                     dpg.show_item(self.parent.label + self.label + "FLOATRAN")
+                    dpg.configure_item(self.parent.lebel + self.label + "FLOATRAN", min_value=self.range[0], max_value=self.range[1])
 
 class Node(ABC):
 
@@ -69,52 +74,55 @@ class Node(ABC):
                 return class_name
 
 
-    def draw(self):
+    def draw(self, pparent=None):
         if not self.drawn:
-            with dpg.node(label=self.label, tag=self.label):
-                for node in self.nodes["INPUT_FIELD"]:
+            with dpg.node(label=self.label, tag=self.label) if pparent is None else dpg.node(label=self.label, tag=self.label, parent=pparent):
+                for node in self.nodes[INPUT_FIELD]:
                     with dpg.node_attribute(label=node.label, tag=self.label + node.label):
                         node.update_draw()
-                for node in self.nodes["OUTPUT_FIELD"]:
-                    with dpg.node_attribute(label=node.label, tag=self.label + node.label, type=dpg.mvNode_Attr_Output):
+                for node in self.nodes[OUTPUT_FIELD]:
+                    with dpg.node_attribute(label=node.label, tag=self.label + node.label, attribute_type=dpg.mvNode_Attr_Output):
                         node.update_draw()
         else:
-            for node in self.nodes["INPUT_FIELD"] + self.nodes["OUTPUT_FIELD"]:
+            return
+            for node in self.nodes[INPUT_FIELD] + self.nodes[OUTPUT_FIELD]:
                 node.update_draw()
 
 class ACCNODE(Node):
     def __init__(self):
         super().__init__()
         self.node_title = "Accelerometer"
-        self.nodes["OUTPUT_FIELD"] = [
+        self.nodes[OUTPUT_FIELD] = [
             NodeField("Acceleration X", self),
             NodeField("Acceleration Y", self),
             NodeField("Acceleration Z", self)
         ]
 
-        self.label = self.register(self.node_title)
+        self.label = self.register(self)
 
 class GYRONODE(Node):
     def __init__(self):
         super().__init__()
         self.node_title = "Gyroscope"
-        self.nodes["OUTPUT_FIELD"] = [
+        self.nodes[OUTPUT_FIELD] = [
             NodeField("Gyroscope X", self),
             NodeField("Gyroscope Y", self),
             NodeField("Gyroscope Z", self)
         ]
 
-        self.label = self.register(self.node_title)
+        self.label = self.register(self)
 
 class SERVONODE(Node):
     def __init__(self):
         super().__init__()
         self.node_title = "Airplane Servos"
-        self.nodes["INPUT_FIELD"] = [
-            NodeField("Servo Yaw"),
-            NodeField("Servo Row"),
-            NodeField("Servo Pitch")
+        self.nodes[INPUT_FIELD] = [
+            NodeField("Servo Yaw", self),
+            NodeField("Servo Row", self),
+            NodeField("Servo Pitch", self)
         ]
+
+        self.label = self.register(self, True)
 
 
 
@@ -126,11 +134,27 @@ def link_callback(sender, app_data):
 def delink_callback(sender, app_data):
     dpg.delete_item(app_data)
 
+def add_node_callback(sender, app_data, user_data):
+    print(f"sender is: {sender}")
+    print(f"app_data is: {app_data}")
+    print(f"user_data is: {user_data}")
+
+    match sender:
+            case "acc_node":
+                return ACCNODE().draw("main")
+            case "gyro_node":
+                return GYRONODE().draw("main")
+            case "servo_node":
+                return SERVONODE().draw("main")
+
+    
+
+
 def add_node_menu():
     dpg.add_text("Pick your nodes here")
-    dpg.add_button(label="Add accelerometer node")
-    dpg.add_button(label="Add gyroscope node")
-    dpg.add_button(label="Add servo output node")
+    dpg.add_button(label="Add accelerometer node", callback=add_node_callback, tag="acc_node")
+    dpg.add_button(label="Add gyroscope node", callback=add_node_callback, tag="gyro_node")
+    dpg.add_button(label="Add servo output node",callback=add_node_callback, tag="servo_node")
 
 
 def main():
@@ -145,7 +169,7 @@ def main():
 
     with dpg.window(label="Tutorial", width=1200, height=900):
 
-        with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
+        with dpg.node_editor(callback=link_callback, delink_callback=delink_callback, tag="main"):
             for node in Node.registered_nodes:
                 node.draw()
 
