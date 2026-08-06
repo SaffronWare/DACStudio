@@ -18,7 +18,7 @@ class Field:
         self.state = state
         self.range = range
 
-
+GLOB_ID = 0
 ID_NODE_HASHMAP = {}
 
 class Node(ABC):
@@ -34,6 +34,11 @@ class Node(ABC):
         self.InputFields = []
         self.OutputFields = []
 
+        self.drawn = False
+        self.drawnInputsData = None
+        self.drawnOutputsData = None
+        
+
 
     def onode(self,i):
         return "".join(self.NodeLabel.split()) + "_" + "".join(self.OutputFields[i].label.split())
@@ -46,31 +51,54 @@ class Node(ABC):
 
 
     def draw(self):
-        with dpg.node(label=self.NodeLabel):
-            for i, InputField in enumerate(self.InputFields):
-                if InputField.state == True:
-                    pass
-                else:
-                    with dpg.node_attribute(label=InputField.label) as id:
-                        ID_NODE_HASHMAP[id] = [i, self, "INPUT"]
-                        if InputField.state == False:
-                            if InputField.range is None:
-                                add_input_float(label=InputField.label)
-                            else:
-                                dpg.add_slider_float(label=InputField.label, min_value=InputField.range[0], max_value=InputField.range[1])
-                        elif isinstance(InputField.state, str):
-                            dpg.add_text("binded")
-                       
-                        # masked do nothing
-            
-            for i, OutputField in enumerate(self.OutputFields):
+        print(self.NodeLabel)
+        global GLOB_ID
+        if not self.drawn:
+            with dpg.node(label=self.NodeLabel, tag=self.NodeLabel):
+                for i, InputField in enumerate(self.InputFields):
+                    if InputField.state == True:
+                        pass
+                        self.drawnInputsData =None
+                    else:
+                        with dpg.node_attribute(label=InputField.label,tag=self.NodeLabel + "_input" + str(i)) as id:
+                            self.drawnInputsData= id
+                            GLOB_ID += 1
+                            ID_NODE_HASHMAP[id] = [i, self, "INPUT"]
+                            if InputField.state == False:
+                                if InputField.range is None:
+                                    add_input_float(label=InputField.label)
+                                else:
+                                    dpg.add_slider_float(label=InputField.label, min_value=InputField.range[0], max_value=InputField.range[1])
+                            elif isinstance(InputField.state, str):
+                                dpg.add_text("binded")
+                        
+                            # masked do nothing
                 
-                if OutputField.state == True:
-                    pass
-                elif OutputField.state == False:
-                    with dpg.node_attribute(label=OutputField.label,attribute_type=dpg.mvNode_Attr_Output) as id:
-                        ID_NODE_HASHMAP[id] = [i, self, "OUTPUT"]
-                        dpg.add_text(OutputField.label)
+                for i, OutputField in enumerate(self.OutputFields):
+                    
+                    if OutputField.state == True:
+                        
+                        pass
+                    elif OutputField.state == False:
+                        with dpg.node_attribute(label=OutputField.label,attribute_type=dpg.mvNode_Attr_Output,tag=self.NodeLabel + "_output"+str(i)) as id:
+                            self.drawnOutputsData =id
+                            GLOB_ID += 1
+                            ID_NODE_HASHMAP[id] = [i, self, "OUTPUT"]
+                            dpg.add_text(OutputField.label)
+            self.drawn = True
+        else:
+            for child in dpg.get_item_children(self.NodeLabel):
+                try:
+                    dpg.delete_item(child)
+                except Exception as e:
+                    print(e)
+      
+
+
+            dpg.delete_item(self.NodeLabel)
+            self.drawn = False
+            self.draw()
+
 
 
 class MPU6500_Accelerometer_Data_Node(Node):
@@ -187,12 +215,15 @@ def link_callback(sender, app_data):
         dpg.delete_item(old_links[iid])
 
     old_links[iid]= dpg.add_node_link(iid, oid, parent=sender)
+
+    node.draw()
     
 
 
 def delink_callback(sender, app_data):
     # app_data -> link_id
     dpg.delete_item(app_data)
+
 
 with dpg.window(label="Tutorial", width=1200, height=900):
 
