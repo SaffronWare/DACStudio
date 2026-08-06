@@ -6,7 +6,6 @@ INPUT_FIELD = 0
 
 class NodeField:
     def __init__(self, label, type, parent, vrange=None):
-        self.draw_id = None
         self.drawn = False
         self.connection = None # not updated if its an output field
         self.label = label
@@ -16,9 +15,16 @@ class NodeField:
     def update_draw(self):
         if not self.drawn:
             if self.connection is None:
-                dpg.add_text(self.label)
+                dpg.add_text(self.label, 
+                             tag=self.parent.label + self.label + "CONNECTED")
             elif self.range is None:
-                dpg.add_float_value(label=self.parent.label + self.label)
+                dpg.add_float_value(label=self.parent.label + self.label, 
+                                    tag=self.parent.label + self.label + "FLOATVAL")
+            else:
+                dpg.add_slider_float(label=self.parent.label + self.label, 
+                                     min_value=self.range[0], 
+                                     max_value=self.range[1], 
+                                     tag=self.parent.label + self.label + "FLOATRAN")
 
 class Node(ABC):
     def __init__(self):
