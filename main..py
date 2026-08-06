@@ -45,6 +45,7 @@ class NodeField:
 class Node(ABC):
 
     node_types_and_counts = {}
+    registered_nodes = []
 
     def __init__(self):
         self.node_title = None
@@ -52,14 +53,18 @@ class Node(ABC):
         self.nodes = {INPUT_FIELD: [], OUTPUT_FIELD: []}
         self.drawn = False
 
-    def register(self, class_name, unique=False):
+    def register(self, obj, unique=False):
+        class_name = obj.node_title
         if not unique:
+            Node.registered_nodes.append(obj)
+        
             Node.node_types_and_counts[class_name] = Node.node_types_and_counts.get(class_name, 0) + 1
             return class_name + str(Node.node_types_and_counts[class_name] - 1)
         else:
             if class_name in Node.node_types_and_counts:
                 return None
             else:
+                Node.registered_nodes.append(obj)
                 Node.node_types_and_counts[class_name] = "UNIQUE"
                 return class_name
 
@@ -110,3 +115,53 @@ class SERVONODE(Node):
             NodeField("Servo Row"),
             NodeField("Servo Pitch")
         ]
+
+
+
+
+
+def link_callback(sender, app_data):
+    return
+    
+def delink_callback(sender, app_data):
+    dpg.delete_item(app_data)
+
+def add_node_menu():
+    dpg.add_text("Pick your nodes here")
+    dpg.add_button(label="Add accelerometer node")
+    dpg.add_button(label="Add gyroscope node")
+    dpg.add_button(label="Add servo output node")
+
+
+def main():
+    dpg.create_context()
+
+    dpg.configure_app(
+        docking=True,
+        docking_space=True,
+        init_file="dac-studio-layout.ini",
+        load_init_file=True,
+    )
+
+    with dpg.window(label="Tutorial", width=1200, height=900):
+
+        with dpg.node_editor(callback=link_callback, delink_callback=delink_callback):
+            for node in Node.registered_nodes:
+                node.draw()
+
+    with dpg.window(label="Nodes"):
+        add_node_menu()
+
+    dpg.create_viewport(title='DAC Studio', width=1200, height=900)
+
+
+    dpg.setup_dearpygui()
+    dpg.show_viewport()
+    dpg.start_dearpygui()
+
+    dpg.save_init_file("dac-studio-layout.ini")
+
+    dpg.destroy_context()
+
+if __name__ == '__main__':
+    main()
