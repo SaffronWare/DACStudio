@@ -6,6 +6,10 @@ INPUT_FIELD = 0
 CURR_NODES = {}
 
 
+def jjoin(*args):
+    return "::".join(list(args))
+
+
 class NodeField:
     def __init__(self, label, parent, vrange=None):
         self.drawn = False
@@ -20,32 +24,32 @@ class NodeField:
             if not self.drawn:
                 #if self.connection is not None:
                 dpg.add_text(self.label, 
-                            tag=self.parent.label + self.label + "CONNECTED")
+                            tag=jjoin(self.parent.label, self.label, "CONNECTED"))
                
                 #elif self.range is None:
                 dpg.add_input_float(label=self.parent.label + self.label, 
-                                    tag=self.parent.label + self.label + "FLOATVAL", width=100)
+                                    tag=jjoin(self.parent.label, self.label, "FLOATVAL"), width=100)
         
            
                 dpg.add_slider_float(label=self.parent.label + self.label, 
                                     min_value=0, 
                                     max_value=1, 
-                                    tag=self.parent.label + self.label + "FLOATRAN", width=100)
+                                    tag=jjoin(self.parent.label, self.label, "FLOATRAN"), width=100)
           
                 self.drawn = True
                 self.update_draw()
             elif self.drawn:
-                dpg.hide_item(self.parent.label + self.label + "CONNECTED")
-                dpg.hide_item(self.parent.label + self.label + "FLOATVAL")
-                dpg.hide_item(self.parent.label + self.label + "FLOATRAN")
+                dpg.hide_item(jjoin(self.parent.label, self.label, "CONNECTED"))
+                dpg.hide_item(jjoin(self.parent.label, self.label, "FLOATVAL"))
+                dpg.hide_item(jjoin(self.parent.label, self.label, "FLOATRAN"))
 
                 if self.connection is not None:
-                    dpg.show_item(self.parent.label + self.label + "CONNECTED")
+                    dpg.show_item(jjoin(self.parent.label, self.label, "CONNECTED"))
                 elif not self.range:
-                    dpg.show_item(self.parent.label + self.label + "FLOATVAL")
+                    dpg.show_item(jjoin(self.parent.label, self.label, "FLOATVAL"))
                 else:
-                    dpg.show_item(self.parent.label + self.label + "FLOATRAN")
-                    dpg.configure_item(self.parent.lebel + self.label + "FLOATRAN", min_value=self.range[0], max_value=self.range[1])
+                    dpg.show_item(jjoin(self.parent.label, self.label, "FLOATRAN"))
+                    dpg.configure_item(jjoin(self.parent.label, self.label, "FLOATRAN"), min_value=self.range[0], max_value=self.range[1])
 
 class Node(ABC):
 
@@ -56,9 +60,18 @@ class Node(ABC):
         self.node_title = None
         self.label = None 
         self.nodes = {INPUT_FIELD: [], OUTPUT_FIELD: []}
+        self.hashed_nodes = {}
         self.drawn = False
 
+    def hash_nodes(self):
+        for node in self.nodes[INPUT_FIELD]:
+            self.hashed_nodes[node.label] = [node, INPUT_FIELD]
+        
+        for node in self.nodes[OUTPUT_FIELD]:
+            self.hashed_nodes[node.label] = [node, OUTPUT_FIELD]
+
     def register(self, obj, unique=False):
+        self.hash_nodes()
         class_name = obj.node_title
         if not unique:
             
@@ -79,10 +92,10 @@ class Node(ABC):
         if not self.drawn:
             with dpg.node(label=self.label, tag=self.label) if pparent is None else dpg.node(label=self.label, tag=self.label, parent=pparent):
                 for node in self.nodes[INPUT_FIELD]:
-                    with dpg.node_attribute(label=node.label, tag=self.label + node.label):
+                    with dpg.node_attribute(label=node.label, tag=jjoin(self.label, node.label)):
                         node.update_draw()
                 for node in self.nodes[OUTPUT_FIELD]:
-                    with dpg.node_attribute(label=node.label, tag=self.label + node.label, attribute_type=dpg.mvNode_Attr_Output):
+                    with dpg.node_attribute(label=node.label, tag=jjoin(self.label, node.label), attribute_type=dpg.mvNode_Attr_Output):
                         node.update_draw()
         else:
             for node in self.nodes[INPUT_FIELD] + self.nodes[OUTPUT_FIELD]:
@@ -126,7 +139,8 @@ class SERVONODE(Node):
 
 
 def link_callback(sender, app_data):
-    return
+    print(f"linking {app_data[0], app_data[1]}")
+    dpg.add_node_link(app_data[0], app_data[1], parent=sender)
     
 def delink_callback(sender, app_data):
     dpg.delete_item(app_data)
