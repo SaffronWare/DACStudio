@@ -5,6 +5,7 @@ OUTPUT_FIELD = 1
 INPUT_FIELD = 0
 CURR_NODES = {}
 
+
 class NodeField:
     def __init__(self, label, parent, vrange=None):
         self.drawn = False
@@ -20,21 +21,20 @@ class NodeField:
                 #if self.connection is not None:
                 dpg.add_text(self.label, 
                             tag=self.parent.label + self.label + "CONNECTED")
-                print("t1")
+               
                 #elif self.range is None:
                 dpg.add_input_float(label=self.parent.label + self.label, 
-                                    tag=self.parent.label + self.label + "FLOATVAL")
-                print("t2")
+                                    tag=self.parent.label + self.label + "FLOATVAL", width=100)
+        
            
                 dpg.add_slider_float(label=self.parent.label + self.label, 
                                     min_value=0, 
                                     max_value=1, 
-                                    tag=self.parent.label + self.label + "FLOATRAN")
-                print("t3")
+                                    tag=self.parent.label + self.label + "FLOATRAN", width=100)
+          
                 self.drawn = True
-                #self.update_draw()
+                self.update_draw()
             elif self.drawn:
-                return
                 dpg.hide_item(self.parent.label + self.label + "CONNECTED")
                 dpg.hide_item(self.parent.label + self.label + "FLOATVAL")
                 dpg.hide_item(self.parent.label + self.label + "FLOATRAN")
@@ -50,7 +50,7 @@ class NodeField:
 class Node(ABC):
 
     node_types_and_counts = {}
-    registered_nodes = []
+    registered_nodes = {}
 
     def __init__(self):
         self.node_title = None
@@ -61,15 +61,16 @@ class Node(ABC):
     def register(self, obj, unique=False):
         class_name = obj.node_title
         if not unique:
-            Node.registered_nodes.append(obj)
+            
         
             Node.node_types_and_counts[class_name] = Node.node_types_and_counts.get(class_name, 0) + 1
+            Node.registered_nodes[class_name + str(Node.node_types_and_counts[class_name] - 1)] = obj
             return class_name + str(Node.node_types_and_counts[class_name] - 1)
         else:
             if class_name in Node.node_types_and_counts:
                 return None
             else:
-                Node.registered_nodes.append(obj)
+                Node.registered_nodes[class_name] = obj
                 Node.node_types_and_counts[class_name] = "UNIQUE"
                 return class_name
 
@@ -84,7 +85,6 @@ class Node(ABC):
                     with dpg.node_attribute(label=node.label, tag=self.label + node.label, attribute_type=dpg.mvNode_Attr_Output):
                         node.update_draw()
         else:
-            return
             for node in self.nodes[INPUT_FIELD] + self.nodes[OUTPUT_FIELD]:
                 node.update_draw()
 
@@ -123,9 +123,6 @@ class SERVONODE(Node):
         ]
 
         self.label = self.register(self, True)
-
-
-
 
 
 def link_callback(sender, app_data):
