@@ -5,6 +5,21 @@ OUTPUT_FIELD = 1
 INPUT_FIELD = 0
 CURR_NODES = {}
 
+CONSTANTS = {
+    "X_MAPS_TO": 0,
+    "Y_MAPS_TO": 0,
+    "Z_MAPS_TO": 0,
+
+    "SERVO_YAW_PIN": 0,
+    "SERVO_PITCH_PIN": 0,
+    "SERVO_ROLL_PIN": 0,
+
+    "DELAY_BEFORE_START_RECORDING_IN_SECONDS": 0,
+    "SHOULD_RECORD_DATA": 1,
+}
+
+VARIABLES = {}
+
 
 def jjoin(*args):
     return "::".join(list(args))
@@ -33,11 +48,11 @@ class NodeField:
                             tag=jjoin(self.parent.label, self.label, "CONNECTED"))
                
                 #elif self.range is None:
-                dpg.add_input_float(label=self.parent.label + self.label, 
+                dpg.add_input_float(label=self.label, 
                                     tag=jjoin(self.parent.label, self.label, "FLOATVAL"), width=100)
         
            
-                dpg.add_slider_float(label=self.parent.label + self.label, 
+                dpg.add_slider_float(label=self.label, 
                                     min_value=0, 
                                     max_value=1, 
                                     tag=jjoin(self.parent.label, self.label, "FLOATRAN"), width=100)
@@ -203,6 +218,42 @@ def add_node_menu():
     dpg.add_button(label="Add gyroscope node", callback=add_node_callback, tag="gyro_node")
     dpg.add_button(label="Add servo output node",callback=add_node_callback, tag="servo_node")
 
+def add_constant():
+    name = dpg.get_value("ADD_CONSTANT")
+    if name not in CONSTANTS:
+        CONSTANTS[name] = 0
+        dpg.add_text(name, before="VARIABLES_TEXT")
+        dpg.add_input_float(label="", default_value=0, tag="c::" + name, parent="config-page", before="VARIABLES_TEXT")
+
+        #print(name)
+
+def add_variable():
+    name =dpg.get_value("ADD_VARIABLE")
+    if name not in VARIABLES:
+        CONSTANTS[name] = 0
+        dpg.add_text(name, parent='config-page')
+    
+def configuration_menu():
+    dpg.add_text("CONSTANTS")
+
+    with dpg.group(horizontal=True):
+           dpg.add_input_text(tag="ADD_CONSTANT")
+           dpg.add_button(label="ADD", callback=add_constant)
+
+    for name, value in CONSTANTS.items():
+        dpg.add_text(name)
+        dpg.add_input_float(label="", default_value=value, tag="c::" + name)
+
+    dpg.add_text("VARIABLES", tag="VARIABLES_TEXT")
+
+    with dpg.group(horizontal=True):
+        dpg.add_input_text(tag="ADD_VARIABLE")
+        dpg.add_button(label="ADD", callback=add_variable)
+    
+    for name,value in VARIABLES.items():
+        dpg.add_text(name)
+        dpg.add_text(label="",  tag="v::"+name)
+
 
 def main():
     dpg.create_context()
@@ -214,17 +265,26 @@ def main():
         load_init_file=True,
     )
 
-    with dpg.window(label="Tutorial", width=1200, height=900):
-
-        with dpg.node_editor(callback=link_callback, delink_callback=delink_callback, tag="main"):
-            for node in Node.registered_nodes:
-                node.draw()
-
-    with dpg.window(label="Nodes"):
-        add_node_menu()
-
+    
     dpg.create_viewport(title='DAC Studio', width=1200, height=900)
+    
 
+    with dpg.window(label="Tutorial", width=1200, height=900):
+        
+            with dpg.node_editor(callback=link_callback, delink_callback=delink_callback, tag="main"):
+                    for node in Node.registered_nodes:
+                        node.draw()
+        
+            
+            with dpg.window(label="Nodes"):
+                add_node_menu()
+        
+            with dpg.window(label="Configuration", tag="config-page"):
+                configuration_menu()
+        
+            print("this will run every frame")
+
+    
 
     dpg.setup_dearpygui()
     dpg.show_viewport()
