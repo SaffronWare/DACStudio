@@ -151,6 +151,7 @@ class Node(ABC):
                 for node in self.nodes[OUTPUT_FIELD]:
                     with dpg.node_attribute(label=node.label, tag=jjoin(self.label, node.label), attribute_type=dpg.mvNode_Attr_Output):
                         node.update_draw()
+            self.drawn = True
         else:
             for node in self.nodes[INPUT_FIELD] + self.nodes[OUTPUT_FIELD]:
                 node.update_draw()
@@ -257,6 +258,8 @@ def link_callback(sender, app_data):
     inNode = Node.registered_nodes[n1].hashed_nodes[f1][0]
     ouNode = Node.registered_nodes[n2].hashed_nodes[f2][0]
 
+    
+
 
 
     if inNode.connection is not None:
@@ -270,6 +273,9 @@ def link_callback(sender, app_data):
     print(n1,f1,n2,f2)
     print(f"creating {jjoin(inNode.fullpath(), ouNode.fullpath())}")
     dpg.add_node_link(app_data[0], app_data[1], parent=sender, tag=jjoin(inNode.fullpath(), ouNode.fullpath()))
+
+    Node.registered_nodes[n1].draw()
+    Node.registered_nodes[n2].draw()
     
 def delink_callback(sender, app_data):
     dpg.delete_item(app_data)
@@ -408,6 +414,7 @@ void loop()
             for j in range(len(nodes)):
                 if j != i:
                     node_other = nodes[j]
+                    # for now ignore a si thing just looking at inputs is enouh
                     if False:
                         for field in node_other.nodes[INPUT_FIELD]:
                             if field.connection is not None:
