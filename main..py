@@ -391,12 +391,12 @@ void loop()
   {
     IMU.update(); 
     IMU.getAccel(&accelData);
-    Serial.println("wow\n");
+    Serial.println("wow\\n");
   
     EEPROM.put((i) * sizeof(float), accelData.accelX);
 
     Serial.println(accelData.accelX);
-    Serial.println("wow\n");
+    Serial.println("wow\\n");
   }
   delay(50);
   i+=1;
@@ -426,7 +426,7 @@ void loop()
                                     print(field.connection.parent.label)
                 
                 
-        for lab,node in Node.registered_nodes.items():
+        for node in nodes:
             f.write(str(node))
             pass
     return
