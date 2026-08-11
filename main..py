@@ -408,9 +408,26 @@ void loop()
   {
     delay(10000 * """)
         f.write(str(CONSTANTS["DELAY_BEFORE_START_RECORDING_IN_SECONDS"]))
-        f.write(");\n")
+        f.write(");\\n}\\n \\n")
 
-        f.write()
+        f.write(
+"""
+    IMU.update(); 
+    IMU.getAccel(&accelData);
+    IMU.getGyro(&gyroData);
+    Serial.println("wow\\n");
+
+    s_AccX = accelData.accelX;
+    s_AccY = accelData.accelY;
+    s_AccZ = accelData.accelZ;
+
+    s_GyroX = gyroData.gyroX;
+    s_GyroY = gyroData.gyroY;
+    s_GyroZ = gyroData.gyroZ;
+    
+
+
+""")
     
         
         nodes = list(Node.registered_nodes.values())
