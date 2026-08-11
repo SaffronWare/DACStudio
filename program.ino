@@ -48,22 +48,28 @@ if ((i+1) * sizeof(float) < 256)
   {
     IMU.update(); 
     IMU.getAccel(&accelData);
-    Serial.println("wow
-");
+    Serial.println("wow\n");
   
     EEPROM.put((i) * sizeof(float), accelData.accelX);
 
     Serial.println(accelData.accelX);
-    Serial.println("wow
-");
+    Serial.println("wow\n");
   }
   delay(50);
   i+=1;
 }
-    s_ServoYaw = Gyroscope0_GyroscopeX;
-    s_ServoRoll = Gyroscope0_GyroscopeZ;
-    s_ServoPitch = Gyroscope0_GyroscopeY;
-
     Gyroscope0_GyroscopeX = s_GyroX;
     Gyroscope0_GyroscopeY = s_GyroY;
     Gyroscope0_GyroscopeZ = s_GyroZ;
+
+    Gyroscope1_GyroscopeX = s_GyroX;
+    Gyroscope1_GyroscopeY = s_GyroY;
+    Gyroscope1_GyroscopeZ = s_GyroZ;
+
+    Accelerometer0_AccelerationX = s_AccX;
+    Accelerometer0_AccelerationY = s_AccY;
+    Accelerometer0_AccelerationZ = s_AccZ;
+
+    s_ServoYaw = Gyroscope0_GyroscopeX;
+    s_ServoRoll = Gyroscope1_GyroscopeX;
+    s_ServoPitch = Accelerometer0_AccelerationX;

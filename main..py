@@ -408,16 +408,16 @@ void loop()
             for j in range(len(nodes)):
                 if j != i:
                     node_other = nodes[j]
-                    if j < i:
+                    if False:
                         for field in node_other.nodes[INPUT_FIELD]:
                             if field.connection is not None:
                                 if field.connection.parent.label == node.label:
                                     nodes.pop(j)
-                                    nodes.insert(i, node_other)
+                                    nodes.insert(i, node_other) # old i+1
                                     print("field is", end=" ")
                                     print(field.connection.parent.label)
-                    else:
-                        for field in node.nodes[OUTPUT_FIELD]:
+                    elif j > i:
+                        for field in node.nodes[INPUT_FIELD]:
                             if field.connection is not None:
                                 if field.connection.parent.label == node_other.label:
                                     nodes.pop(j)
