@@ -354,12 +354,12 @@ def create_program():
 
         for constantk, ckvalue in CONSTANTS.items():
             f.write(constantk)
-            f.write(" =" )
+            f.write(" = " )
             f.write(str(ckvalue))
             f.write(";\n")
         
         f.write(
-"""#include "FastIMU.h"
+"""\n#include "FastIMU.h"
 #include <Wire.h>
 #include <EEPROM.h>
 
@@ -398,6 +398,21 @@ void setup()
   }
 }
 """)
+
+        f.write(
+"""
+int i = 0;
+void loop()
+{
+  if (i == 0)
+  {
+    delay(10000 * """)
+        f.write(str(CONSTANTS["DELAY_BEFORE_START_RECORDING_IN_SECONDS"]))
+        f.write(");\n")
+
+        f.write()
+    
+        
         nodes = list(Node.registered_nodes.values())
         # want to sort in a way where each node only depends on those like before it
         for i in range(len(nodes)):
