@@ -22,10 +22,11 @@ VARIABLES = {}
 
 
 def jjoin(*args):
-    return "::".join(list(map(args, lambda x: "".join(x.split()))))
+    
+    return "::".join(list(args))
 
 def njoin(*args):
-    return "_".join(list(map(args, lambda x: "".join(x.split()))))
+    return "_".join(list(map(lambda x: "".join(x.split()), list(args))))
 
 def ssplit(string):
     return string.split("::")
@@ -101,7 +102,7 @@ class Node(ABC):
             elif char == "$":
                 i += 1
                 var_input_index = int(srcstr[i])
-                out += njoin(self.nodes[INPUT_FIELD][var_input_index - 1].parent.label, self.nodes[INPUT_FIELD][var_input_index - 1].connection.label)
+                out += njoin(self.nodes[INPUT_FIELD][var_input_index - 1].connection.parent.label, self.nodes[INPUT_FIELD][var_input_index - 1].connection.label)
                 i += 1
             else:
                 out += char
@@ -335,6 +336,7 @@ def configuration_menu():
 
 def create_program():
     with open("program.ino", "w"):
+        # somehow have to choose order 🥹💔
         for lab,node in Node.registered_nodes.items():
             print(node) 
     return
