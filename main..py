@@ -82,20 +82,26 @@ class Node(ABC):
     node_types_and_counts = {}
     registered_nodes = {}
 
-    def __str__(self, srcstr):
+    @abstractmethod
+    def __str__(self):
+        pass
+
+    def tostr(self, srcstr):
+        print(srcstr)
         i = 0
         out = ""
         while i < len(srcstr):
+            print(out)
             char = srcstr[i]
             if char  == "~":
                 i += 1
                 var_output_index = int(srcstr[i])
-                out += self.nodes[OUTPUT_FIELD][var_output_index]
+                out += self.nodes[OUTPUT_FIELD][var_output_index].label
                 i += 1
             elif char == "$":
                 i += 1
                 var_input_index = int(srcstr[i])
-                out += self.nodes[INPUT_FIELD][var_input_index].connection
+                out += self.nodes[INPUT_FIELD][var_input_index].connection.label
                 i += 1
             else:
                 out += char
@@ -166,6 +172,9 @@ class ACCNODE(Node):
         ]
 
         self.label = self.register(self)
+    def __str__(self):
+            return super().tostr(self.source_reference)
+    
 
     
 
@@ -202,6 +211,9 @@ class GYRONODE(Node):
         ]
 
         self.label = self.register(self)
+    def __str__(self):
+            return super().tostr(GYRONODE.source_reference)
+    
 
 class SERVONODE(Node):
     source_reference = """
@@ -219,6 +231,9 @@ class SERVONODE(Node):
         ]
 
         self.label = self.register(self, True)
+
+    def __str__(self):
+        return super().tostr(self.source_reference)
 
 
 
@@ -318,6 +333,14 @@ def configuration_menu():
         dpg.add_text(label="",  tag="v::"+name)
 
 
+def create_program():
+    with open("program.ino", "w"):
+        for lab,node in Node.registered_nodes.items():
+            print(node) 
+    return
+
+
+
 def main():
     dpg.create_context()
 
@@ -344,6 +367,10 @@ def main():
         
             with dpg.window(label="Configuration", tag="config-page"):
                 configuration_menu()
+
+            with dpg.window(label="options"):
+                dpg.add_button(label="Create Program", callback=create_program)
+                    
         
             print("this will run every frame")
 
