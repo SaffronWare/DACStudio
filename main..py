@@ -317,6 +317,15 @@ def add_variable():
     if name not in VARIABLES:
         CONSTANTS[name] = 0
         dpg.add_text(name, parent='config-page')
+
+def set_constant(app, sender):
+    print(app,sender)
+    CONSTANTS[app[3:]] = sender
+    print(CONSTANTS)
+
+def set_variable(app, sender):
+    print(app, sender)
+
     
 def configuration_menu():
     dpg.add_text("CONSTANTS")
@@ -327,7 +336,7 @@ def configuration_menu():
 
     for name, value in CONSTANTS.items():
         dpg.add_text(name)
-        dpg.add_input_float(label="", default_value=value, tag="c::" + name)
+        dpg.add_input_float(label="", default_value=value, tag="c::" + name, callback=set_constant)
 
     dpg.add_text("VARIABLES", tag="VARIABLES_TEXT")
 
