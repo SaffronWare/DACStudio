@@ -351,7 +351,13 @@ def configuration_menu():
 
 def create_program():
     with open("program.ino", "w") as f:
-        # somehow have to choose order 🥹💔
+
+        for constantk, ckvalue in CONSTANTS.items():
+            f.write(constantk)
+            f.write(" =" )
+            f.write(str(ckvalue))
+            f.write(";\n")
+        
         f.write(
 """#include "FastIMU.h"
 #include <Wire.h>
@@ -391,31 +397,7 @@ void setup()
     }
   }
 }
-
-int i = 0;
-void loop()
-{
-  if (i == 0)
-  {
-    delay(1000 * 120);
-  }
-"""
-)
-        f.write(
-"""if ((i+1) * sizeof(float) < 256)
-  {
-    IMU.update(); 
-    IMU.getAccel(&accelData);
-    Serial.println("wow\\n");
-  
-    EEPROM.put((i) * sizeof(float), accelData.accelX);
-
-    Serial.println(accelData.accelX);
-    Serial.println("wow\\n");
-  }
-  delay(50);
-  i+=1;
-}""")
+""")
         nodes = list(Node.registered_nodes.values())
         # want to sort in a way where each node only depends on those like before it
         for i in range(len(nodes)):
