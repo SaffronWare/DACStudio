@@ -22,10 +22,10 @@ VARIABLES = {}
 
 
 def jjoin(*args):
-    return "::".join(list(args))
+    return "::".join(list(map(args, lambda x: "".join(x.split()))))
 
 def njoin(*args):
-    return "_".join(list(args))
+    return "_".join(list(map(args, lambda x: "".join(x.split()))))
 
 def ssplit(string):
     return string.split("::")
@@ -96,12 +96,12 @@ class Node(ABC):
             if char  == "~":
                 i += 1
                 var_output_index = int(srcstr[i])
-                out += self.nodes[OUTPUT_FIELD][var_output_index].label
+                out +=  njoin(self.label, self.nodes[OUTPUT_FIELD][var_output_index - 1].label)
                 i += 1
             elif char == "$":
                 i += 1
                 var_input_index = int(srcstr[i])
-                out += self.nodes[INPUT_FIELD][var_input_index].connection.label
+                out += njoin(self.nodes[INPUT_FIELD][var_input_index - 1].parent.label, self.nodes[INPUT_FIELD][var_input_index - 1].connection.label)
                 i += 1
             else:
                 out += char
