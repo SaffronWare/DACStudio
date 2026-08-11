@@ -24,6 +24,9 @@ VARIABLES = {}
 def jjoin(*args):
     return "::".join(list(args))
 
+def njoin(*args):
+    return "_".join(list(args))
+
 def ssplit(string):
     return string.split("::")
 
@@ -79,9 +82,26 @@ class Node(ABC):
     node_types_and_counts = {}
     registered_nodes = {}
 
-    @abstractmethod
-    def __init__(self):
-        pass
+    def __str__(self, srcstr):
+        i = 0
+        out = ""
+        while i < len(srcstr):
+            char = srcstr[i]
+            if char  == "~":
+                i += 1
+                var_output_index = int(srcstr[i])
+                out += self.nodes[OUTPUT_FIELD][var_output_index]
+                i += 1
+            elif char == "$":
+                i += 1
+                var_input_index = int(srcstr[i])
+                out += self.nodes[INPUT_FIELD][var_input_index].connection
+                i += 1
+            else:
+                out += char
+            i += 1
+        return out
+        
 
     def __init__(self):
         self.node_title = None
@@ -131,9 +151,9 @@ class Node(ABC):
 class ACCNODE(Node):
 
     source_reference = """
-    !1! = s_AccX;
-    !2! = s_AccY;
-    !3! = s_AccZ;
+    ~1~ = s_AccX;
+    ~2~ = s_AccY;
+    ~3~ = s_AccZ;
 """
 
     def __init__(self):
@@ -147,11 +167,11 @@ class ACCNODE(Node):
 
         self.label = self.register(self)
 
+    
 
-class VARNODE(Node):
-    source_reference = """
-    !1! = $1$ 
 """
+class VARNODE(Node):
+    
 
     def __init__(self, varname):
         super().__init__()
@@ -159,18 +179,17 @@ class VARNODE(Node):
         self.nodes[INPUT_FIELD] = [
             NodeField(varname, self)
         ]
-        self.nodes[OUTPUT_FIELD] = [
-            NodeField(varname,self)
-        ]
+        
 
         self.label = self.register(self, True)
+        """
 
 
 class GYRONODE(Node):
     source_reference = """
-    !1! = s_GyroX;
-    !2! = s_GyroY;
-    !3! = s_GyroZ;
+    ~1~ = s_GyroX;
+    ~2~ = s_GyroY;
+    ~3~ = s_GyroZ;
 """
 
     def __init__(self):
@@ -200,6 +219,7 @@ class SERVONODE(Node):
         ]
 
         self.label = self.register(self, True)
+
 
 
 def link_callback(sender, app_data):
